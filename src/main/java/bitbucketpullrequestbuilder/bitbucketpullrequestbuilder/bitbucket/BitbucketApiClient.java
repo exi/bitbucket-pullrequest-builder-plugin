@@ -14,6 +14,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import static org.apache.commons.httpclient.methods.PostMethod.FORM_URL_ENCODED_CONTENT_TYPE;
+import org.apache.commons.httpclient.util.EncodingUtil;
 
 /**
  * Created by nishio
@@ -58,8 +61,8 @@ public class BitbucketApiClient {
         String path = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments/" + commentId;
         //https://bitbucket.org/api/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}
         try {
-            String content = "content=" + comment;
-            String response = putRequest(path, content);
+            NameValuePair content = new NameValuePair("content", comment);
+            String response = putRequest(path, new NameValuePair[]{ content });
 
             return parseSingleCommentJson(response);
 
@@ -125,11 +128,16 @@ public class BitbucketApiClient {
         }
     }
 
-    private String putRequest(String path, String params) throws UnsupportedEncodingException {
+    private String putRequest(String path, NameValuePair[] params) throws UnsupportedEncodingException {
         HttpClient client = new HttpClient();
         client.getState().setCredentials(AuthScope.ANY, credentials);
         PutMethod httpput = new PutMethod(path);
-        httpput.setRequestBody(params);
+        String content = EncodingUtil.formUrlEncode(params, "UTF8");
+        ByteArrayRequestEntity entity = new ByteArrayRequestEntity(
+            EncodingUtil.getAsciiBytes(content),
+            FORM_URL_ENCODED_CONTENT_TYPE
+        );
+        httpput.setRequestEntity(entity);
         client.getParams().setAuthenticationPreemptive(true);
         String response = "";
         try {

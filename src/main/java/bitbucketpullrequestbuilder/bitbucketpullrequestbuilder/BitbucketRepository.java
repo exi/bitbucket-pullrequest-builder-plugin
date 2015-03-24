@@ -17,7 +17,8 @@ import java.util.logging.Logger;
 public class BitbucketRepository {
     private static final Logger logger = Logger.getLogger(BitbucketRepository.class.getName());
     public static final String BUILD_START_MARKER = "[*BuildStarting*] %s";
-    public static final String BUILD_STARTED_SENTENCE = "[*BuildStarted*] %s \n\n %s";
+    public static final String BUILD_STARTED_MARKER = "[*BuildStarted*] %s";
+    public static final String BUILD_STARTED_SENTENCE = BUILD_STARTED_MARKER + " \n\n %s";
     public static final String BUILD_FINISH_MARKER = "[*BuildFinished*] %s";
     public static final String BUILD_FINISH_SENTENCE = BUILD_FINISH_MARKER + " \n\n **%s** - %s";
     public static final String BUILD_REQUEST_MARKER = "test this please";
@@ -113,6 +114,7 @@ public class BitbucketRepository {
             String id = pullRequest.getId();
             List<BitbucketPullRequestComment> comments = client.getPullRequestComments(owner, repositoryName, id);
             String searchStartMarker = String.format(BUILD_START_MARKER, commit).toLowerCase();
+            String searchStartedMarker = String.format(BUILD_STARTED_MARKER, commit).toLowerCase();
             String searchFinishMarker = String.format(BUILD_FINISH_MARKER, commit).toLowerCase();
 
             if (comments != null) {
@@ -125,6 +127,7 @@ public class BitbucketRepository {
                     }
                     content = content.toLowerCase();
                     if (content.contains(searchStartMarker) ||
+                        content.contains(searchStartedMarker) ||
                         content.contains(searchFinishMarker)) {
                         shouldBuild = false;
                         break;
