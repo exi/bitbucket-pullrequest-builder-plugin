@@ -40,6 +40,10 @@ public class BitbucketBuilds {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Can't update build description", e);
         }
+        repository.updateBuildStartComment(cause.getPullRequestId(),
+                                           cause.getCommitHash(),
+                                           cause.getBuildStartCommentId(),
+                                           this.getBuildUrl(build));
     }
 
     public void onCompleted(AbstractBuild build) {
@@ -48,15 +52,21 @@ public class BitbucketBuilds {
             return;
         }
         Result result = build.getResult();
+        repository.deletePullRequestComment(cause.getPullRequestId(), cause.getBuildStartCommentId());
+        repository.postFinishedComment(cause.getPullRequestId(), cause.getCommitHash(), result == Result.SUCCESS, this.getBuildUrl(build));
+    }
+
+    public String getBuildUrl (AbstractBuild build) {
         String rootUrl = Jenkins.getInstance().getRootUrl();
         String buildUrl = "";
+
         if (rootUrl == null) {
             buildUrl = " PLEASE SET JENKINS ROOT URL FROM GLOBAL CONFIGURATION " + build.getUrl();
         }
         else {
             buildUrl = rootUrl + build.getUrl();
         }
-        repository.deletePullRequestComment(cause.getPullRequestId(), cause.getBuildStartCommentId());
-        repository.postFinishedComment(cause.getPullRequestId(), cause.getCommitHash(), result == Result.SUCCESS, buildUrl);
+
+        return buildUrl;
     }
 }

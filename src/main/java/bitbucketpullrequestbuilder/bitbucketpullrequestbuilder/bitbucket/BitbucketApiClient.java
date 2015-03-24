@@ -4,6 +4,7 @@ import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -49,6 +50,24 @@ public class BitbucketApiClient {
             return parseCommentJson(response);
         } catch(Exception e) {
             logger.log(Level.WARNING, "invalid pull request response.", e);
+        }
+        return null;
+    }
+
+    public BitbucketPullRequestComment updatePullRequestComment(String pullRequestId, String commentId, String comment) {
+        String path = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments/" + commentId;
+        //https://bitbucket.org/api/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}
+        try {
+            String content = "content=" + comment;
+            String response = putRequest(path, content);
+
+            return parseSingleCommentJson(response);
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -106,6 +125,25 @@ public class BitbucketApiClient {
         }
     }
 
+    private String putRequest(String path, String params) throws UnsupportedEncodingException {
+        HttpClient client = new HttpClient();
+        client.getState().setCredentials(AuthScope.ANY, credentials);
+        PutMethod httpput = new PutMethod(path);
+        httpput.setRequestBody(params);
+        client.getParams().setAuthenticationPreemptive(true);
+        String response = "";
+        try {
+            client.executeMethod(httpput);
+            response = httpput.getResponseBodyAsString();
+            logger.info("API Request Response: " + response);
+        } catch (HttpException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+
     private String postRequest(String path, NameValuePair[] params) throws UnsupportedEncodingException {
         HttpClient client = new HttpClient();
         client.getState().setCredentials(AuthScope.ANY, credentials);
@@ -123,7 +161,6 @@ public class BitbucketApiClient {
             e.printStackTrace();
         }
         return response;
-
     }
 
     private BitbucketPullRequestResponse parsePullRequestJson(String response) throws IOException {

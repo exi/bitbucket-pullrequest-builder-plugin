@@ -16,7 +16,8 @@ import java.util.logging.Logger;
  */
 public class BitbucketRepository {
     private static final Logger logger = Logger.getLogger(BitbucketRepository.class.getName());
-    public static final String BUILD_START_MARKER = "[*BuildStarted*] %s";
+    public static final String BUILD_START_MARKER = "[*BuildStarting*] %s";
+    public static final String BUILD_STARTED_SENTENCE = "[*BuildStarted*] %s \n\n %s";
     public static final String BUILD_FINISH_MARKER = "[*BuildFinished*] %s";
     public static final String BUILD_FINISH_SENTENCE = BUILD_FINISH_MARKER + " \n\n **%s** - %s";
     public static final String BUILD_REQUEST_MARKER = "test this please";
@@ -59,6 +60,11 @@ public class BitbucketRepository {
             String comment = String.format(BUILD_START_MARKER, commit);
             BitbucketPullRequestComment commentResponse = this.client.postPullRequestComment(pullRequest.getId(), comment);
             return commentResponse.getCommentId().toString();
+    }
+
+    public void updateBuildStartComment(String pullRequestId, String commit, String commentId, String buildUrl) {
+        String comment = String.format(BUILD_STARTED_SENTENCE, commit, buildUrl);
+        this.client.updatePullRequestComment(pullRequestId, commentId, comment);
     }
 
     public void addFutureBuildTasks(Collection<BitbucketPullRequestResponseValue> pullRequests) {
