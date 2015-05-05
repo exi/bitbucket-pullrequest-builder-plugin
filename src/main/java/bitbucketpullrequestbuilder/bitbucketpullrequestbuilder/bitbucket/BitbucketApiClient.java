@@ -11,6 +11,7 @@ import org.codehaus.jackson.type.TypeReference;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,13 +38,13 @@ public class BitbucketApiClient {
     }
 
     public List<BitbucketPullRequestResponseValue> getPullRequests() {
-        String response = getRequest(V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/");
         try {
+            String response = getRequest(V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/");
             return parsePullRequestJson(response).getPrValues();
         } catch(Exception e) {
             logger.log(Level.WARNING, "invalid pull request response.", e);
         }
-        return null;
+        return new ArrayList<BitbucketPullRequestResponseValue>();
     }
 
     public List<BitbucketPullRequestComment> getPullRequestComments(String commentOwnerName, String commentRepositoryName, String pullRequestId) {
